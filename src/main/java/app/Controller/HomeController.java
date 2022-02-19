@@ -17,6 +17,7 @@ import java.io.FileOutputStream;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @CrossOrigin
@@ -78,21 +79,36 @@ public class HomeController {
     }
 
     @PostMapping("/add")
-    public String add(Person person) {
+    public String add(@RequestBody Person person) {
         try {
-        String [] charArray = person.getImage().split(",");
-        Base64.Decoder decoder = Base64.getDecoder();
-        byte[] bytes = new byte[0];
-        bytes = decoder.decode(charArray[1]);
-        String imgName = generateNameImg()+".jpg";
-        String directory= "uploaded/"+imgName;
-        new FileOutputStream(directory).write(bytes);
-        PersonEntity personEntity = personMapper.PersonToPersonEntity(person);
-        personEntity.setImage(imgName);
-        personRepository.save(personEntity);
+            if(person.getImage() != "") {
+                String [] charArray = person.getImage().split(",");
+                Base64.Decoder decoder = Base64.getDecoder();
+                byte[] bytes = new byte[0];
+                bytes = decoder.decode(charArray[1]);
+                String imgName = generateNameImg()+".jpg";
+                String directory= "uploaded/"+imgName;
+                new FileOutputStream(directory).write(bytes);
+                PersonEntity personEntity = personMapper.PersonToPersonEntity(person);
+                personEntity.setImage(imgName);
+                personRepository.save(personEntity);
+            } else {
+                PersonEntity personEntity = personMapper.PersonToPersonEntity(person);
+                personEntity.setImage("");
+                personRepository.save(personEntity);
+            }
         return "Person has successfully added";
         } catch (Exception ex) {
             return ex.getMessage();
+        }
+    }
+
+    @GetMapping("/get")
+    public PersonEntity get(String name) {
+        if(name != "") {
+            return personRepository.findByName(name);
+        } else {
+            return null;
         }
     }
 
